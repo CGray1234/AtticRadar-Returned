@@ -62,18 +62,18 @@ var productLookup = {
 }
 
 
-$('#productsDropdownTrigger').click(function() {
+$('#productsDropdownTrigger').click(function () {
     var psm = $('#productSelectionMenu');
     psm.css('bottom', parseInt($('#map').css('bottom')) + 5);
     psm.show();
 
-    $(document.body).click(function(e) {
+    $(document.body).click(function (e) {
         function hidePSM() {
             psm.hide();
             $(document.body).off('click');
         }
 
-        var isOnRestrictedElem = 
+        var isOnRestrictedElem =
             psm.find($(e.target)).length == 1 ||
             $(e.target).is(psm) ||
             $(e.target).hasClass('psmNoHideElem');
@@ -97,7 +97,7 @@ function loadTiltBtns(numOfTiltsArr) {
     }
 }
 
-$('.psmRow').click(function(e) {
+$('.psmRow').click(function (e) {
     if ($(e.target).is($(this)) && !$(this).hasClass('l2prodSel')) {
         const currentStation = window.atticData.currentStation; // 'KAKQ';
 
@@ -106,7 +106,7 @@ $('.psmRow').click(function(e) {
 
         $('#productsDropdownTriggerText').text(longProductNames[value]);
 
-        var selectedTiltNum = $(this).find('.psmRowTiltSelect').text().split(' ')[1];
+        var selectedTiltNum = Number($(this).find('.psmRowTiltSelect').text().split(' ')[1]);
         var resultProduct = productLookup[selectedTiltNum][value];
 
         window.atticData.from_file_upload = false;
@@ -122,14 +122,14 @@ $('.psmRow').click(function(e) {
     }
 })
 
-$('.psmRow').on('mouseover mousemove', function(e) {
+$('.psmRow').on('mouseover mousemove', function (e) {
     // we don't want to highlight the row if we're hovering over the tilt menu
     if ($(e.target).is($(this))) {
         $(this).css('background-color', 'rgb(85, 85, 85)');
     } else {
         $(this).css('background-color', '');
     }
-}).on('mouseleave', function(e) {
+}).on('mouseleave', function (e) {
     $(this).css('background-color', '');
 })
 
@@ -143,12 +143,12 @@ function enableScrolling() {
     $('#psmTiltDropdownBackdrop').hide();
 }
 
-$('#psmTiltDropdownBackdrop').click(function(e) {
+$('#psmTiltDropdownBackdrop').click(function (e) {
     enableScrolling();
     $('#psmTiltDropdown').hide();
 })
 
-$('.psmRowTiltSelect').click(function() {
+$('.psmRowTiltSelect').click(function () {
     const fadeDuration = 100;
     // the blue text element with "Tilt X" written
     var thisObj = $(this);
@@ -170,9 +170,9 @@ $('.psmRowTiltSelect').click(function() {
     }); // .hide().fadeIn(fadeDuration);
 
     // when the user clicks on one of the tilt options in the dropdown menu
-    $('.psmTiltDropdownRow').click(function() {
+    $('.psmTiltDropdownRow').click(function () {
         // reset all blue text elements to display "Tilt 1"
-        $('.psmRowTiltSelect').each(function() {
+        $('.psmRowTiltSelect').each(function () {
             $(this).text('Tilt 1');
         })
         // set the blue text element to read the text of the selected dropdown item
