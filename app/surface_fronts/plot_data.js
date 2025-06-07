@@ -94,7 +94,7 @@ function _add_fronts_layer(feature_collection) {
         'paint': {
             'line-color': ['get', 'color'],
             'line-width': ['get', 'width'],
-            'line-dasharray': ['get', 'dasharray'],
+            // 'line-dasharray': ['get', 'dasharray'], expressions for dasharrays are not supported in maplibre 5.6.0
         }
     });
 }

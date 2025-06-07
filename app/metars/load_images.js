@@ -5,7 +5,7 @@ const metar_plot = require('metar-plot');
 
 function _add_image_to_map(image_url, image_name, callback) {
     const img = new Image(200, 200);
-    img.onload = () => map.addImage(image_name, img);
+    img.onload = () => { if (!map.hasImage(image_name)) map.addImage(image_name, img); }
     img.src = image_url;
 }
 

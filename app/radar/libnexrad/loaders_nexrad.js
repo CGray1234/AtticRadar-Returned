@@ -14,11 +14,11 @@ const Level3Factory = require('../libnexrad/level3/level3_factory');
  */
 function file_to_buffer(url, callback) {
     fetch(url)
-    .then(response => response.arrayBuffer())
-    .then(buffer => {
-        var fileBuffer = Buffer.from(buffer);
-        callback(fileBuffer);
-    });
+        .then(response => response.arrayBuffer())
+        .then(buffer => {
+            var fileBuffer = Buffer.from(buffer);
+            callback(fileBuffer);
+        });
 }
 
 /**
@@ -107,40 +107,40 @@ function get_latest_level_3_url(station, product, index, callback, date) {
         fullURL = ut.preventFileCaching(fullURL);
 
         const headers = new Headers().append('Cache-Control', 'no-cache');
-        fetch(ut.phpProxy + fullURL, {cache: 'no-store', headers: headers}).then(response => response.text())
-        .then(function(data) {
-        //$.get(ut.phpProxy + fullURL, function (data) {
-            try {
-                var dataToWorkWith = JSON.stringify(ut.xmlToJson(data)).replace(/#/g, 'HASH')
-                dataToWorkWith = JSON.parse(dataToWorkWith)
-                //console.log(dataToWorkWith)
-                var contentsBase = dataToWorkWith.ListBucketResult.Contents;
-                var filenameKey;
-                var dateKey;
-                if (Array.isArray(contentsBase)) {
-                    filenameKey = contentsBase[contentsBase.length - (index + 1)].Key.HASHtext;
-                    dateKey = contentsBase[contentsBase.length - (index + 1)].LastModified.HASHtext;
-                } else {
-                    filenameKey = contentsBase.Key.HASHtext;
-                    dateKey = contentsBase.LastModified.HASHtext;
-                }
+        fetch(fullURL, { cache: 'no-store', headers: headers }).then(response => response.text())
+            .then(function (data) {
+                //$.get(ut.phpProxy + fullURL, function (data) {
+                try {
+                    var dataToWorkWith = JSON.stringify(ut.xmlToJson(data)).replace(/#/g, 'HASH')
+                    dataToWorkWith = JSON.parse(dataToWorkWith)
+                    //console.log(dataToWorkWith)
+                    var contentsBase = dataToWorkWith.ListBucketResult.Contents;
+                    var filenameKey;
+                    var dateKey;
+                    if (Array.isArray(contentsBase)) {
+                        filenameKey = contentsBase[contentsBase.length - (index + 1)].Key.HASHtext;
+                        dateKey = contentsBase[contentsBase.length - (index + 1)].LastModified.HASHtext;
+                    } else {
+                        filenameKey = contentsBase.Key.HASHtext;
+                        dateKey = contentsBase.LastModified.HASHtext;
+                    }
 
-                var finishedURL = `${urlBase}${filenameKey}`;
-                callback(finishedURL, new Date(dateKey));
-            } catch(e) {
-                // we don't want to go back days for storm tracking - most of the time an empty directory
-                // of storm track files means there are no storm tracks avaliable at the time (e.g. clear skies / no storms)
-                if ((product != 'NTV' && product != 'NMD' && product != 'NST') && timesGoneBack < 15) {
-                    // error checking - if nothing exists for this date, fetch the directory listing for the previous day
-                    var d = curTime;
-                    d.setDate(d.getDate() - 1);
-                    timesGoneBack++;
-                    get_latest_level_3_url(station, product, index, callback, d);
-                } else {
-                    callback(null);
+                    var finishedURL = `${urlBase}${filenameKey}`;
+                    callback(finishedURL, new Date(dateKey));
+                } catch (e) {
+                    // we don't want to go back days for storm tracking - most of the time an empty directory
+                    // of storm track files means there are no storm tracks avaliable at the time (e.g. clear skies / no storms)
+                    if ((product != 'NTV' && product != 'NMD' && product != 'NST') && timesGoneBack < 15) {
+                        // error checking - if nothing exists for this date, fetch the directory listing for the previous day
+                        var d = curTime;
+                        d.setDate(d.getDate() - 1);
+                        timesGoneBack++;
+                        get_latest_level_3_url(station, product, index, callback, d);
+                    } else {
+                        callback(null);
+                    }
                 }
-            }
-        })
+            })
     } else {
         if (product == 'NST') { product = '58sti' }
         if (product == 'NTV') { product = '61tvs' }
@@ -149,11 +149,11 @@ function get_latest_level_3_url(station, product, index, callback, date) {
         fileUrl = ut.preventFileCaching(fileUrl);
 
         fetch(ut.phpProxy + `https://tgftp.nws.noaa.gov/SL.us008001/DF.of/DC.radar/DS.${product}/SI.${station.toLowerCase()}/sn.last#`)
-        .then(response => {
-            const file_modified_date = response.headers.get('Last-Modified');
+            .then(response => {
+                const file_modified_date = response.headers.get('Last-Modified');
 
-            callback(fileUrl, new Date(file_modified_date));
-        })
+                callback(fileUrl, new Date(file_modified_date));
+            })
     }
 
     /*
@@ -227,7 +227,7 @@ function return_level_3_factory_from_buffer(arraybuffer, callback) {
  * @param {Function} callback - A callback function. Passes a single variable, which is an instance of a L3Factory class.
  */
 function quick_level_3_plot(station, product, callback = null) {
-    if (callback == null) { callback = function() {} }
+    if (callback == null) { callback = function () { } }
     return_level_3_factory_from_info(station, product, (L3Factory) => {
         if (window?.atticData?.current_RadarUpdater != undefined) {
             window.atticData.current_RadarUpdater.disable();
@@ -268,7 +268,7 @@ function quick_storm_relative_velocity_plot(station, product, callback = null) {
  * @param {Function} callback - A callback function. Passes a single variable, which is an instance of a L3Factory class.
  */
 function level_3_plot_from_url(url, callback = null) {
-    if (callback == null) { callback = function() {} }
+    if (callback == null) { callback = function () { } }
     return_level_3_factory_from_url(url, (L3Factory) => {
         if (window?.atticData?.current_RadarUpdater != undefined) {
             window.atticData.current_RadarUpdater.disable();
@@ -336,7 +336,7 @@ function process_storm_relative_velocity(baseVelocityFactory, stormVectorFactory
     // Get storm speed and dir from the product description block
     const product_desc = stormVectorFactory.initial_radar_obj.prod_desc;
 
-    
+
     const stormSpeed = (product_desc.dep8 || 0) / 10 * 0.514444; // Convert to m/s
     const stormDirection = (product_desc.dep9 || 0) / 10;
     // Override the get_data method to apply the storm vector to the velocity data
@@ -349,7 +349,7 @@ function process_storm_relative_velocity(baseVelocityFactory, stormVectorFactory
         return velocityData.map((radial, i) => {
             const azimuth = azimuthAngles[i];
             return radial.map(velocity => {
-                if (velocity === null || 
+                if (velocity === null ||
                     velocity === this.initial_radar_obj.map_data.MISSING ||
                     velocity === this.initial_radar_obj.map_data.RANGE_FOLD) {
                     return velocity;
