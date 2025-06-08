@@ -1,7 +1,7 @@
 const display_attic_dialog = require('../core/menu/attic_dialog');
 
 async function get_update_text() {
-    const res = await fetch('/app/update_notes/latest_update');
+    const res = await fetch('app/update_notes/latest_update');
     const data = await res.text();
 
     return data;
