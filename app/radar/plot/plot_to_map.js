@@ -89,23 +89,21 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
     var layer = {
         id: 'baseReflectivity',
         type: 'custom',
+        shaderMap: new Map(),
 
-        onAdd: function (map, gl) {
-            create_and_show_colorbar(colors, values);
-            // create the color scale texture
-            imagedata = create_WebGL_texture(colors, values);
-            imagetexture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, imagetexture);
+        getShader(gl, shaderDescription) {
+            if (this.shaderMap.has(shaderDescription.variantName)) {
+                return this.shaderMap.get(shaderDescription.variantName);
+            }
 
-            // compile the vertex shader
             var vertexShader = gl.createShader(gl.VERTEX_SHADER);
-            gl.shaderSource(vertexShader, vertex_source);
+            gl.shaderSource(vertexShader, `${shaderDescription.vertexShaderPrelude}
+                ${shaderDescription.define}` + vertex_source);
             gl.compileShader(vertexShader);
             if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
                 console.error('Vertex shader compilation error:', gl.getShaderInfoLog(vertexShader));
             }
 
-            // compile the main fragment shader
             var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
             gl.shaderSource(fragmentShader, fragment_source);
             gl.compileShader(fragmentShader);
@@ -113,7 +111,6 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
                 console.error('Fragment shader compilation error:', gl.getShaderInfoLog(fragmentShader));
             }
 
-            // compile the framebuffer fragment shader
             var fragmentShaderFramebuffer = gl.createShader(gl.FRAGMENT_SHADER);
             gl.shaderSource(fragmentShaderFramebuffer, fragment_framebuffer_source);
             gl.compileShader(fragmentShaderFramebuffer);
@@ -121,47 +118,41 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
                 console.error('Fragment shader frame buffer compilation error:', gl.getShaderInfoLog(fragmentShaderFramebuffer));
             }
 
-            // create the main program
-            this.program = gl.createProgram();
-            gl.attachShader(this.program, vertexShader);
-            gl.attachShader(this.program, fragmentShader);
-            gl.linkProgram(this.program);
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Program linking error:', gl.getProgramInfoLog(program));
+            }
 
-            // create the framebuffer program
             this.programFramebuffer = gl.createProgram();
             gl.attachShader(this.programFramebuffer, vertexShader);
             gl.attachShader(this.programFramebuffer, fragmentShaderFramebuffer);
             gl.linkProgram(this.programFramebuffer);
 
-            // retrieve the main program's uniforms
-            this.matrixLocation = gl.getUniformLocation(this.program, 'u_matrix')
-            this.positionLocation = gl.getAttribLocation(this.program, 'aPosition');
-            this.colorLocation = gl.getAttribLocation(this.program, 'aColor');
-            this.textureLocation = gl.getUniformLocation(this.program, 'u_texture');
-            this.minmaxLocation = gl.getUniformLocation(this.program, 'minmax');
-            this.radarLngLatLocation = gl.getUniformLocation(this.program, 'radar_lat_lng');
+            this.matrixLocation = gl.getUniformLocation(program, 'u_matrix')
+            this.positionLocation = gl.getAttribLocation(program, 'aPosition');
+            this.colorLocation = gl.getAttribLocation(program, 'aColor');
+            this.textureLocation = gl.getUniformLocation(program, 'u_texture');
+            this.minmaxLocation = gl.getUniformLocation(program, 'minmax');
+            this.radarLngLatLocation = gl.getUniformLocation(program, 'radar_lat_lng');
 
-            // retrieve the framebuffer program's uniforms
             this.matrixLocationFramebuffer = gl.getUniformLocation(this.programFramebuffer, 'u_matrix');
             this.minmaxLocationFramebuffer = gl.getUniformLocation(this.programFramebuffer, 'minmax');
             this.radarLngLatLocationFramebuffer = gl.getUniformLocation(this.programFramebuffer, 'radar_lat_lng');
 
-            // var newVertexF32 = new Float32Array(vertexF32.length * 2);
-            // var offset = 0;
-            // for (var i = 0; i < vertexF32.length; i += 2) {
-            //     var x = vertexF32[i];
-            //     var y = vertexF32[i + 1];
-            //     var f32x = x - x;
-            //     var f32y = y - y;
-            //     // if (f32x != 0) { console.log(x) }
-            //     // if (f32y != 0) { console.log(y) }
+            this.shaderMap.set(shaderDescription.variantName, program);
 
-            //     newVertexF32[offset] = x;
-            //     newVertexF32[offset + 1] = y;
-            //     newVertexF32[offset + 2] = f32x;
-            //     newVertexF32[offset + 3] = f32y;
-            //     offset += 4;
-            // }
+            return program;
+        },
+
+        onAdd: function (map, gl) {
+            create_and_show_colorbar(colors, values);
+            // create the color scale texture
+            imagedata = create_WebGL_texture(colors, values);
+            imagetexture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, imagetexture);
 
             // create and bind the buffer for the vertex data
             this.vertexBuffer = gl.createBuffer();
@@ -184,21 +175,32 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
             // initialize the framebuffer
             createFramebuffer(gl);
         },
-        render: function (gl, matrix) {
-            // function splitDouble(dbl) {
-            //     function doubleToFloat(d) { return new Float32Array([d])[0] }
-            //     var arr = new Float32Array(2);
-            //     arr[0] = doubleToFloat(dbl);
-            //     arr[1] = doubleToFloat(dbl - arr[0]);
-            //     return arr;
-            // }
-            // var highMatrix = [];
-            // var lowMatrix = [];
-            // for (var i in matrix) {
-            //     var split = splitDouble(matrix[i]);
-            //     highMatrix.push(split[0]);
-            //     lowMatrix.push(split[1]);
-            // }
+        render: function (gl, args) {
+            const program = this.getShader(gl, args.shaderData);
+            gl.useProgram(program);
+
+            gl.uniformMatrix4fv(
+                gl.getUniformLocation(program, 'u_projection_fallback_matrix'),
+                false,
+                args.defaultProjectionData.fallbackMatrix // convert mat4 from gl-matrix to a plain array
+            );
+            gl.uniformMatrix4fv(
+                gl.getUniformLocation(program, 'u_projection_matrix'),
+                false,
+                args.defaultProjectionData.mainMatrix // convert mat4 from gl-matrix to a plain array
+            );
+            gl.uniform4f(
+                gl.getUniformLocation(program, 'u_projection_tile_mercator_coords'),
+                ...args.defaultProjectionData.tileMercatorCoords
+            );
+            gl.uniform4f(
+                gl.getUniformLocation(program, 'u_projection_clipping_plane'),
+                ...args.defaultProjectionData.clippingPlane
+            );
+            gl.uniform1f(
+                gl.getUniformLocation(program, 'u_projection_transition'),
+                args.defaultProjectionData.projectionTransition
+            );
 
             // bind the buffers for the vertices, colors, and the texture
             gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -222,16 +224,14 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
             // only render to the framebuffer if the color picker is active,
             // this helps with performance
             if ($('#colorPickerItemClass').hasClass('menu_item_selected')) {
-                renderToFramebuffer.apply(this, [gl, matrix.defaultProjectionData.mainMatrix]);
+                renderToFramebuffer.apply(this, [gl, args.defaultProjectionData.mainMatrix]);
             }
 
             /*
             * use the main program to render to the map
             */
-            gl.useProgram(this.program);
-
             // set uniforms for the main shaders
-            gl.uniformMatrix4fv(this.matrixLocation, false, matrix.defaultProjectionData.mainMatrix);
+            gl.uniformMatrix4fv(this.matrixLocation, false, args.defaultProjectionData.mainMatrix);
             gl.uniform2fv(this.radarLngLatLocation, [radar_lat_lng.lat, radar_lat_lng.lng]);
             gl.uniform2fv(this.minmaxLocation, [cmin, cmax]);
             gl.uniform1i(this.textureLocation, 0);

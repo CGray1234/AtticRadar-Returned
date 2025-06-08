@@ -6,12 +6,12 @@ const setLayerOrder = require('../map/setLayerOrder');
 const fetchMETARData = require('../../metars/fetch_data');
 const fetch_alerts_data = require('../../alerts/fetch_data');
 const fetch_spc_data = require('../../spc/fetch_data');
-const change_map_style = require('../map/styles');
+const { change_map_style, is_globe } = require('../map/styles');
 
 const divElem = '#settingsItemDiv';
 const iconElem = '#settingsItemClass';
 
-$(iconElem).on('click', function() {
+$(iconElem).on('click', function () {
     //$('#settingsModalTrigger').click();
     armFunctions.showARMwindow();
 
@@ -20,7 +20,7 @@ $(iconElem).on('click', function() {
     $('#atticRadarMenuMainScreen').show();
 })
 
-$('#armrSTVisBtnSwitchElem').on('click', function() {
+$('#armrSTVisBtnSwitchElem').on('click', function () {
     var isChecked = $(this).is(':checked');
     $('#dataDiv').data('stormTracksVisibility', isChecked);
 
@@ -43,14 +43,14 @@ $('#armrSTVisBtnSwitchElem').on('click', function() {
     }
 })
 
-armFunctions.toggleswitchFunctions($('#armrRadarVisBtnSwitchElem'), function() {
+armFunctions.toggleswitchFunctions($('#armrRadarVisBtnSwitchElem'), function () {
     if (map.getLayer('baseReflectivity')) {
         map.setLayoutProperty('baseReflectivity', 'visibility', 'visible');
     }
     if (map.getLayer('station_range_layer')) {
         map.setLayoutProperty('station_range_layer', 'visibility', 'visible');
     }
-}, function() {
+}, function () {
     if (map.getLayer('baseReflectivity')) {
         map.setLayoutProperty('baseReflectivity', 'visibility', 'none');
     }
@@ -59,17 +59,17 @@ armFunctions.toggleswitchFunctions($('#armrRadarVisBtnSwitchElem'), function() {
     }
 })
 
-armFunctions.toggleswitchFunctions($('#armrLightningVisBtnSwitchElem'), function() {
+armFunctions.toggleswitchFunctions($('#armrLightningVisBtnSwitchElem'), function () {
     if (map.getLayer('lightningLayer')) {
         map.setLayoutProperty('lightningLayer', 'visibility', 'visible');
     }
-}, function() {
+}, function () {
     if (map.getLayer('lightningLayer')) {
         map.setLayoutProperty('lightningLayer', 'visibility', 'none');
     }
 })
 
-armFunctions.toggleswitchFunctions($('#armrSTVisBtnSwitchElem'), function() {
+armFunctions.toggleswitchFunctions($('#armrSTVisBtnSwitchElem'), function () {
     var stormTrackLayers = window.atticData.stormTrackLayers;
     if (stormTrackLayers != undefined) {
         for (var i in stormTrackLayers) {
@@ -78,7 +78,7 @@ armFunctions.toggleswitchFunctions($('#armrSTVisBtnSwitchElem'), function() {
             }
         }
     }
-}, function() {
+}, function () {
     var stormTrackLayers = window.atticData.stormTrackLayers;
     if (stormTrackLayers != undefined) {
         for (var i in stormTrackLayers) {
@@ -89,18 +89,19 @@ armFunctions.toggleswitchFunctions($('#armrSTVisBtnSwitchElem'), function() {
     }
 })
 
-armFunctions.toggleswitchFunctions($('#armrDayNightLineVisBtnSwitchElem'), function() {
+armFunctions.toggleswitchFunctions($('#armrDayNightLineVisBtnSwitchElem'), function () {
     terminator.toggleVisibility('show');
-}, function() {
+}, function () {
     terminator.toggleVisibility('hide');
 })
 
-$('.map_style_button').click(function() {
-    $('.map_style_button').not(this).each(function() { this.checked = false; })
+$('.map_style_button').click(function () {
+    $('.map_style_button').not(this).each(function () { this.checked = false; })
 })
-armFunctions.toggleswitchFunctions($('#armrSatelliteMapBtnSwitchElem'), function() { change_map_style('satellite'); })
-armFunctions.toggleswitchFunctions($('#armrLightMapBtnSwitchElem'), function() { change_map_style('light'); })
-armFunctions.toggleswitchFunctions($('#armrDarkMapBtnSwitchElem'), function() { change_map_style('dark'); })
+// armFunctions.toggleswitchFunctions($('#armrSatelliteMapBtnSwitchElem'), function () { change_map_style('satellite'); })
+// armFunctions.toggleswitchFunctions($('#armrLightMapBtnSwitchElem'), function () { change_map_style('light'); })
+// armFunctions.toggleswitchFunctions($('#armrDarkMapBtnSwitchElem'), function () { change_map_style('dark'); })
+armFunctions.toggleswitchFunctions($('#armrGlobeMapBtnSwitchElem'), function () { is_globe(true); }, function () { is_globe(false); })
 
 function _reload_alerts() {
     if ($('#alertMenuItemIcon').hasClass('icon-blue')) {
@@ -109,31 +110,31 @@ function _reload_alerts() {
 }
 armFunctions.toggleswitchFunctions($('#armrWarningsBtnSwitchElem'), _reload_alerts, _reload_alerts);
 armFunctions.toggleswitchFunctions($('#armrStatementsBtnSwitchElem'), _reload_alerts, _reload_alerts);
-armFunctions.toggleswitchFunctions($('#armrWatchesBtnSwitchElem'), function() {
+armFunctions.toggleswitchFunctions($('#armrWatchesBtnSwitchElem'), function () {
     if ($('#alertMenuItemIcon').hasClass('menu_item_selected')) {
         if (map.getLayer('watches_layer')) { map.setLayoutProperty('watches_layer', 'visibility', 'visible'); }
         if (map.getLayer('watches_layer_fill')) { map.setLayoutProperty('watches_layer_fill', 'visibility', 'visible'); }
     }
-}, function() {
+}, function () {
     if (map.getLayer('watches_layer')) { map.setLayoutProperty('watches_layer', 'visibility', 'none'); }
     if (map.getLayer('watches_layer_fill')) { map.setLayoutProperty('watches_layer_fill', 'visibility', 'none'); }
 })
-armFunctions.toggleswitchFunctions($('#armrDiscussionsBtnSwitchElem'), function() {
+armFunctions.toggleswitchFunctions($('#armrDiscussionsBtnSwitchElem'), function () {
     if ($('#alertMenuItemIcon').hasClass('menu_item_selected')) {
         if (map.getLayer('discussions_layer')) { map.setLayoutProperty('discussions_layer', 'visibility', 'visible'); }
         if (map.getLayer('discussions_layer_fill')) { map.setLayoutProperty('discussions_layer_fill', 'visibility', 'visible'); }
     }
-}, function() {
+}, function () {
     if (map.getLayer('discussions_layer')) { map.setLayoutProperty('discussions_layer', 'visibility', 'none'); }
     if (map.getLayer('discussions_layer_fill')) { map.setLayoutProperty('discussions_layer_fill', 'visibility', 'none'); }
 })
 
-armFunctions.toggleswitchFunctions($('#armrHurricaneLegendVisBtnSwitchElem'), function() {
+armFunctions.toggleswitchFunctions($('#armrHurricaneLegendVisBtnSwitchElem'), function () {
     const is_hurricanes_enabled = $('#armrHurricanesBtnSwitchElem').is(':checked');
     if (is_hurricanes_enabled) {
         $('#hurricaneLegendDiv').show();
     }
-}, function() {
+}, function () {
     const is_hurricanes_enabled = $('#armrHurricanesBtnSwitchElem').is(':checked');
     if (is_hurricanes_enabled) {
         $('#hurricaneLegendDiv').hide();

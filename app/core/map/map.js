@@ -6,7 +6,7 @@ const map = new maplibregl.Map({
     maxZoom: 20,
     preserveDrawingBuffer: true,
     // bearingSnap: 360,
-    maxPitch: 0,
+    // maxPitch: 0,
 
     fadeDuration: 0,
 
@@ -15,8 +15,14 @@ const map = new maplibregl.Map({
     //maxPitch: 75,
     //zoom: 6,
     //center: [-66.0190363102349, 18.15295560177013],
-    projection: 'mercator',
+    projection: 'globe',
     //fadeDuration: 0,
+});
+
+map.on('load', () => {
+    map.setProjection({
+        type: 'globe'
+    });
 });
 
 const ut = require('../utils');
@@ -37,11 +43,11 @@ if (require('../misc/detect_mobile_browser')) {
 }
 
 // MOBILE - disable map rotation using touch rotation gesture
-map.touchZoomRotate.disableRotation();
+// map.touchZoomRotate.disableRotation();
 // DESKTOP - disable map rotation using right click + drag
-map.dragRotate.disable();
+// map.dragRotate.disable();
 // DESKTOP - disable map rotation using the keyboard
-map.keyboard.disableRotation();
+// map.keyboard.disableRotation();
 // prevent the context menu from opening when right clicking on the map
 $('#map').on('contextmenu', function (e) {
     if ($(e.target).hasClass('maplibre-canvas')) {

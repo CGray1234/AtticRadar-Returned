@@ -232,22 +232,11 @@
         <!--
         THIS IS THE HTML FOR THE NEW MODAL (DIALOG) (i wrote it myself)
     -->
-        <div id="atcDlg" style="display: block">
+        <div id="atcDlg" style="display: none">
             <div id="atcDlgContainer">
-                <div id="atcDlgHeader"><span id="atcDlgHeaderText">PLEASE READ</span><i id="atcDlgClose"
-                        class="fa fa-xmark"></i></div>
-                <div id="atcDlgBody" style="text-align: center">On June 6, 2025, the official AtticRadar website was shut down. The original developer, <a target="_blank" href="https://github.com/SteepAtticStairs/">SteepAtticStairs</a>, stated:
-
-                    <img src="statement.png" style="width: 34rem">
-
-With the source code left open, I decided to make a fork of the original code and modify it to keep AtticRadar running.
-
-Now, you may have already noticed that there have been some changes, and that change being the completely different map style.
-Why is this you may ask?
-Well the answer is because I switched from <a target="_blank" href="https://mapbox.com/">Mapbox</a> (which, to a point, is paid) to <a target="_blank" href="https://maplibre.org/">MapLibre</a> (which is free). I made this change because I don't want to have to pay for Mapbox, and MapLibre does all of the same things for free. I may add custom styles later on, but for now it will remain as this style.
-
-Have any questions?
-Feel free to DM me on Discord, my username is <code class="about_box_code">cgray.09</code>.
+                <div id="atcDlgHeader"><span id="atcDlgHeaderText"></span><i id="atcDlgClose" class="fa fa-xmark"></i>
+                </div>
+                <div id="atcDlgBody">
                 </div>
             </div>
         </div>
@@ -367,11 +356,17 @@ Feel free to DM me on Discord, my username is <code class="about_box_code">cgray
                         <br>
 
                         <div class="armrHeader">INFO</div>
-                        <div class="atticRadarMenuRow" id="armrAboutBtn">
+                        <div class="atticRadarMenuRow armrTop" id="armrUpdateBtn">
+                            <i class="armrIcon armrIcon-Blue fa-solid fa-pen-to-square"></i>
+                            Update Logs
+                            <i class="armrIconArrowRight fa-solid fa-chevron-right"></i>
+                        </div>
+                        <div class="atticRadarMenuRow armrBottom" id="armrAboutBtn">
                             <i class="armrIcon armrIcon-Blue fa-solid fa-circle-info"></i>
                             About
                             <i class="armrIconArrowRight fa-solid fa-chevron-right"></i>
                         </div>
+
 
                         <br>
 
@@ -458,27 +453,36 @@ Feel free to DM me on Discord, my username is <code class="about_box_code">cgray
                         <br>
 
                         <div class="armrHeader armrHeaderWide">MAP STYLES</div>
-                        <div class="atticRadarMenuRow armrTop armrWide" id="armrDarkMapBtn">
+                        <!--div class="atticRadarMenuRow armrTop armrWide" id="armrDarkMapBtn">
                             Dark
                             <div class="form-check form-switch">
                                 <input class="map_style_button form-check-input toggleSwitchContainter tscWide"
                                     onfocus="this.blur();" type="checkbox" role="switch" id="armrDarkMapBtnSwitchElem"
                                     checked>
                             </div>
-                        </div>
-                        <div class="atticRadarMenuRow armrMiddle armrWide" id="armrLightMapBtn">
+                        </div-->
+                        <!--div class="atticRadarMenuRow armrMiddle armrWide" id="armrLightMapBtn">
                             Light
                             <div class="form-check form-switch">
                                 <input class="map_style_button form-check-input toggleSwitchContainter tscWide"
                                     onfocus="this.blur();" type="checkbox" role="switch" id="armrLightMapBtnSwitchElem">
                             </div>
-                        </div>
-                        <div class="atticRadarMenuRow armrBottom armrWide" id="armrSatelliteMapBtn">
+                        </div-->
+                        <!--div class="atticRadarMenuRow armrBottom armrWide" id="armrSatelliteMapBtn">
                             Satellite
                             <div class="form-check form-switch">
                                 <input class="map_style_button form-check-input toggleSwitchContainter tscWide"
                                     onfocus="this.blur();" type="checkbox" role="switch"
                                     id="armrSatelliteMapBtnSwitchElem">
+                            </div>
+                        </div-->
+
+                        <div class="atticRadarMenuRow armrTop armrWide" id="armrGlobeMapBtn">
+                            Globe
+                            <div class="form-check form-switch">
+                                <input class="map_style_button form-check-input toggleSwitchContainter tscWide"
+                                    onfocus="this.blur();" type="checkbox" role="switch" id="armrGlobeMapBtnSwitchElem"
+                                    checked>
                             </div>
                         </div>
 

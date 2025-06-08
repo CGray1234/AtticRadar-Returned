@@ -7,7 +7,7 @@ const set_layer_order = require('../../core/map/setLayerOrder');
 const AtticPopup = require('../../core/popup/AtticPopup');
 const display_attic_dialog = require('../../core/menu/attic_dialog');
 
-const all_watches_url = ut.phpProxy + `https://www.spc.noaa.gov/products/watch/ActiveWW.kmz`; // https://www.spc.noaa.gov/products/watch/ActiveWW.kmz
+const all_watches_url = `https://www.spc.noaa.gov/products/watch/ActiveWW.kmz`; // https://www.spc.noaa.gov/products/watch/ActiveWW.kmz
 
 function click_listener(e) {
     // if (e.originalEvent.cancelBubble) { return; }
@@ -15,10 +15,10 @@ function click_listener(e) {
     // popup.add_to_map();
 
     if (e.originalEvent.cancelBubble) { return; }
-    
+
     const renderedFeatures = map.queryRenderedFeatures(e.point);
     if (renderedFeatures[0] && renderedFeatures[0].layer.id == 'stationSymbolLayer') return;
-    
+
     const properties = e.features[0].properties;
     const divid = `ww${properties.id}`
 

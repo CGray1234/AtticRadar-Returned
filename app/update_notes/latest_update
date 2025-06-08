@@ -1,0 +1,13 @@
+<div style="text-align: left;"><h1>Globe Projection & Update Logs</h1><hr/><video autoplay loop preload poster muted width="100%"><source src="app/update_notes/globe.mp4" type="video/mp4"></video>
+<div><b><u>(1/2)</u></b>
+Globe projection is now in AtticRadar!
+View weather data in a whole new perspective.
+
+<b>This setting is enabled by default when you open the page.</b>
+
+To toggle the globe setting, go into Settings and flip the "Globe" switch under the "Map Styles" section.
+<hr/><b><u>(2/2)</u></b>
+As you can already see, update popups have been added!
+
+These popups will automatically appear when an update has been released. Once you close it, you won't see it again (unless you go into the menu and click the "Update Logs" button).
+</div></div>

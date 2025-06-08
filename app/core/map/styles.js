@@ -59,4 +59,10 @@ function change_map_style(style) {
     set_layer_order();
 }
 
-module.exports = change_map_style;
+function is_globe(bool) {
+    map.setProjection({
+        type: bool ? 'globe' : 'mercator'
+    });
+}
+
+module.exports = { change_map_style, is_globe };
