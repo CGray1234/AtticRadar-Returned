@@ -90,6 +90,8 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
         id: 'baseReflectivity',
         type: 'custom',
         shaderMap: new Map(),
+        framebufferProgramMap: new Map(),
+        framebufferLocationMap: new Map(),
 
         getShader(gl, shaderDescription) {
             if (this.shaderMap.has(shaderDescription.variantName)) {
@@ -97,7 +99,8 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
             }
 
             var vertexShader = gl.createShader(gl.VERTEX_SHADER);
-            gl.shaderSource(vertexShader, `${shaderDescription.vertexShaderPrelude}
+            gl.shaderSource(vertexShader, `
+                ${shaderDescription.vertexShaderPrelude}
                 ${shaderDescription.define}` + vertex_source);
             gl.compileShader(vertexShader);
             if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
@@ -126,21 +129,20 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
                 console.error('Program linking error:', gl.getProgramInfoLog(program));
             }
 
-            this.programFramebuffer = gl.createProgram();
-            gl.attachShader(this.programFramebuffer, vertexShader);
-            gl.attachShader(this.programFramebuffer, fragmentShaderFramebuffer);
-            gl.linkProgram(this.programFramebuffer);
+            const programFramebuffer = gl.createProgram();
+            gl.attachShader(programFramebuffer, vertexShader);
+            gl.attachShader(programFramebuffer, fragmentShaderFramebuffer);
+            gl.linkProgram(programFramebuffer);
+            if (!gl.getProgramParameter(programFramebuffer, gl.LINK_STATUS)) {
+                console.error('Program linking error:', gl.getProgramInfoLog(programFramebuffer));
+            }
 
-            this.matrixLocation = gl.getUniformLocation(program, 'u_matrix')
-            this.positionLocation = gl.getAttribLocation(program, 'aPosition');
-            this.colorLocation = gl.getAttribLocation(program, 'aColor');
-            this.textureLocation = gl.getUniformLocation(program, 'u_texture');
-            this.minmaxLocation = gl.getUniformLocation(program, 'minmax');
-            this.radarLngLatLocation = gl.getUniformLocation(program, 'radar_lat_lng');
-
-            this.matrixLocationFramebuffer = gl.getUniformLocation(this.programFramebuffer, 'u_matrix');
-            this.minmaxLocationFramebuffer = gl.getUniformLocation(this.programFramebuffer, 'minmax');
-            this.radarLngLatLocationFramebuffer = gl.getUniformLocation(this.programFramebuffer, 'radar_lat_lng');
+            this.framebufferProgramMap.set(shaderDescription.variantName, programFramebuffer);
+            this.framebufferLocationMap.set(shaderDescription.variantName, {
+                matrixLocation: gl.getUniformLocation(programFramebuffer, 'u_matrix'),
+                minmaxLocation: gl.getUniformLocation(programFramebuffer, 'minmax'),
+                radarLngLatLocation: gl.getUniformLocation(programFramebuffer, 'radar_lat_lng')
+            });
 
             this.shaderMap.set(shaderDescription.variantName, program);
 
@@ -179,6 +181,13 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
             const program = this.getShader(gl, args.shaderData);
             gl.useProgram(program);
 
+            const matrixLocation = gl.getUniformLocation(program, 'u_matrix')
+            const positionLocation = gl.getAttribLocation(program, 'aPosition');
+            const colorLocation = gl.getAttribLocation(program, 'aColor');
+            const textureLocation = gl.getUniformLocation(program, 'u_texture');
+            const minmaxLocation = gl.getUniformLocation(program, 'minmax');
+            const radarLngLatLocation = gl.getUniformLocation(program, 'radar_lat_lng');
+
             gl.uniformMatrix4fv(
                 gl.getUniformLocation(program, 'u_projection_fallback_matrix'),
                 false,
@@ -204,12 +213,12 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
 
             // bind the buffers for the vertices, colors, and the texture
             gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-            gl.enableVertexAttribArray(this.positionLocation);
-            gl.vertexAttribPointer(this.positionLocation, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
-            gl.enableVertexAttribArray(this.colorLocation);
-            gl.vertexAttribPointer(this.colorLocation, 1, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(colorLocation);
+            gl.vertexAttribPointer(colorLocation, 1, gl.FLOAT, false, 0, 0);
 
             gl.bindTexture(gl.TEXTURE_2D, imagetexture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imagedata);
@@ -224,17 +233,61 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
             // only render to the framebuffer if the color picker is active,
             // this helps with performance
             if ($('#colorPickerItemClass').hasClass('menu_item_selected')) {
-                renderToFramebuffer.apply(this, [gl, args.defaultProjectionData.mainMatrix]);
+                const framebufferProgram = this.framebufferProgramMap.get(args.shaderData.variantName);
+                const framebufferLocations = this.framebufferLocationMap.get(args.shaderData.variantName);
+
+                if (framebufferProgram && framebufferLocations) {
+                    gl.useProgram(framebufferProgram);
+
+                    gl.uniformMatrix4fv(
+                        gl.getUniformLocation(framebufferProgram, 'u_projection_fallback_matrix'),
+                        false,
+                        args.defaultProjectionData.fallbackMatrix
+                    );
+                    gl.uniformMatrix4fv(
+                        gl.getUniformLocation(framebufferProgram, 'u_projection_matrix'),
+                        false,
+                        args.defaultProjectionData.mainMatrix
+                    );
+                    gl.uniform4f(
+                        gl.getUniformLocation(framebufferProgram, 'u_projection_tile_mercator_coords'),
+                        ...args.defaultProjectionData.tileMercatorCoords
+                    );
+                    gl.uniform4f(
+                        gl.getUniformLocation(framebufferProgram, 'u_projection_clipping_plane'),
+                        ...args.defaultProjectionData.clippingPlane
+                    );
+                    gl.uniform1f(
+                        gl.getUniformLocation(framebufferProgram, 'u_projection_transition'),
+                        args.defaultProjectionData.projectionTransition
+                    );
+
+                    gl.uniformMatrix4fv(framebufferLocations.matrixLocation, false, args.defaultProjectionData.mainMatrix);
+                    gl.uniform2fv(framebufferLocations.radarLngLatLocation, [radar_lat_lng.lat, radar_lat_lng.lng]);
+                    gl.uniform2fv(framebufferLocations.minmaxLocation, [cmin, cmax]);
+
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, window.atticData.fb);
+
+                    gl.clearColor(0, 0, 0, 0);
+                    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+                    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+                    gl.drawArrays(gl.TRIANGLES, 0, vertexF32.length / 2);
+
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                    gl.useProgram(program);
+                }
             }
 
             /*
             * use the main program to render to the map
             */
             // set uniforms for the main shaders
-            gl.uniformMatrix4fv(this.matrixLocation, false, args.defaultProjectionData.mainMatrix);
-            gl.uniform2fv(this.radarLngLatLocation, [radar_lat_lng.lat, radar_lat_lng.lng]);
-            gl.uniform2fv(this.minmaxLocation, [cmin, cmax]);
-            gl.uniform1i(this.textureLocation, 0);
+            gl.uniformMatrix4fv(matrixLocation, false, args.defaultProjectionData.mainMatrix);
+            gl.uniform2fv(radarLngLatLocation, [radar_lat_lng.lat, radar_lat_lng.lng]);
+            gl.uniform2fv(minmaxLocation, [cmin, cmax]);
+            gl.uniform1i(textureLocation, 0);
 
             // draw vertices
             gl.enable(gl.BLEND);
