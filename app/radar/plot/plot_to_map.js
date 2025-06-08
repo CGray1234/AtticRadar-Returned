@@ -66,25 +66,6 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
         gl.bindFramebuffer(gl.FRAMEBUFFER, window.atticData.fb);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0);
     }
-    function renderToFramebuffer(gl, matrix) {
-        gl.useProgram(this.programFramebuffer);
-
-        // set uniforms for the framebuffer shaders
-        gl.uniformMatrix4fv(this.matrixLocationFramebuffer, false, matrix);
-        gl.uniform2fv(this.radarLngLatLocationFramebuffer, [radar_lat_lng.lat, radar_lat_lng.lng]);
-        gl.uniform2fv(this.minmaxLocationFramebuffer, [cmin, cmax]);
-
-        // render to the framebuffer
-        gl.bindFramebuffer(gl.FRAMEBUFFER, window.atticData.fb);
-
-        // transparent black is no radar data
-        gl.clearColor(0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        gl.drawArrays(gl.TRIANGLES, 0, vertexF32.length / 2);
-
-        // disable framebuffer, render to the map
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    }
 
     var layer = {
         id: 'baseReflectivity',
@@ -230,55 +211,56 @@ function plot_to_map(verticies_arr, colors_arr, product, nexrad_factory) {
             /*
             * use the program to render to the framebuffer
             */
-            // only render to the framebuffer if the color picker is active,
-            // this helps with performance
-            if ($('#colorPickerItemClass').hasClass('menu_item_selected')) {
-                const framebufferProgram = this.framebufferProgramMap.get(args.shaderData.variantName);
-                const framebufferLocations = this.framebufferLocationMap.get(args.shaderData.variantName);
+            // only render to the framebuffer if the color picker is active (no longer doing this),
+            // this helps with performance (not that much)
 
-                if (framebufferProgram && framebufferLocations) {
-                    gl.useProgram(framebufferProgram);
+            // if ($('#colorPickerItemClass').hasClass('menu_item_selected')) {
+            const framebufferProgram = this.framebufferProgramMap.get(args.shaderData.variantName);
+            const framebufferLocations = this.framebufferLocationMap.get(args.shaderData.variantName);
 
-                    gl.uniformMatrix4fv(
-                        gl.getUniformLocation(framebufferProgram, 'u_projection_fallback_matrix'),
-                        false,
-                        args.defaultProjectionData.fallbackMatrix
-                    );
-                    gl.uniformMatrix4fv(
-                        gl.getUniformLocation(framebufferProgram, 'u_projection_matrix'),
-                        false,
-                        args.defaultProjectionData.mainMatrix
-                    );
-                    gl.uniform4f(
-                        gl.getUniformLocation(framebufferProgram, 'u_projection_tile_mercator_coords'),
-                        ...args.defaultProjectionData.tileMercatorCoords
-                    );
-                    gl.uniform4f(
-                        gl.getUniformLocation(framebufferProgram, 'u_projection_clipping_plane'),
-                        ...args.defaultProjectionData.clippingPlane
-                    );
-                    gl.uniform1f(
-                        gl.getUniformLocation(framebufferProgram, 'u_projection_transition'),
-                        args.defaultProjectionData.projectionTransition
-                    );
+            if (framebufferProgram && framebufferLocations) {
+                gl.useProgram(framebufferProgram);
 
-                    gl.uniformMatrix4fv(framebufferLocations.matrixLocation, false, args.defaultProjectionData.mainMatrix);
-                    gl.uniform2fv(framebufferLocations.radarLngLatLocation, [radar_lat_lng.lat, radar_lat_lng.lng]);
-                    gl.uniform2fv(framebufferLocations.minmaxLocation, [cmin, cmax]);
+                gl.uniformMatrix4fv(
+                    gl.getUniformLocation(framebufferProgram, 'u_projection_fallback_matrix'),
+                    false,
+                    args.defaultProjectionData.fallbackMatrix
+                );
+                gl.uniformMatrix4fv(
+                    gl.getUniformLocation(framebufferProgram, 'u_projection_matrix'),
+                    false,
+                    args.defaultProjectionData.mainMatrix
+                );
+                gl.uniform4f(
+                    gl.getUniformLocation(framebufferProgram, 'u_projection_tile_mercator_coords'),
+                    ...args.defaultProjectionData.tileMercatorCoords
+                );
+                gl.uniform4f(
+                    gl.getUniformLocation(framebufferProgram, 'u_projection_clipping_plane'),
+                    ...args.defaultProjectionData.clippingPlane
+                );
+                gl.uniform1f(
+                    gl.getUniformLocation(framebufferProgram, 'u_projection_transition'),
+                    args.defaultProjectionData.projectionTransition
+                );
 
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, window.atticData.fb);
+                gl.uniformMatrix4fv(framebufferLocations.matrixLocation, false, args.defaultProjectionData.mainMatrix);
+                gl.uniform2fv(framebufferLocations.radarLngLatLocation, [radar_lat_lng.lat, radar_lat_lng.lng]);
+                gl.uniform2fv(framebufferLocations.minmaxLocation, [cmin, cmax]);
 
-                    gl.clearColor(0, 0, 0, 0);
-                    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, window.atticData.fb);
 
-                    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+                gl.clearColor(0, 0, 0, 0);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-                    gl.drawArrays(gl.TRIANGLES, 0, vertexF32.length / 2);
+                gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-                    gl.useProgram(program);
-                }
+                gl.drawArrays(gl.TRIANGLES, 0, vertexF32.length / 2);
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                gl.useProgram(program);
             }
+            // }
 
             /*
             * use the main program to render to the map

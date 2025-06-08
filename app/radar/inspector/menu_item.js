@@ -5,7 +5,7 @@ const getValue = require('./get_value');
 const divElem = '#colorPickerItemDiv';
 const iconElem = '#colorPickerItemClass';
 
-$(iconElem).on('click', function() {
+$(iconElem).on('click', function () {
     if (!$(iconElem).hasClass('menu_item_selected')) {
         $(iconElem).addClass('menu_item_selected');
         $(iconElem).removeClass('menu_item_not_selected');
