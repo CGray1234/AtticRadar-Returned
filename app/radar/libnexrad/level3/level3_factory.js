@@ -24,7 +24,7 @@ function _zero_pad(num) {
  * A class that provides simple access to the radar data returned from the 'NEXRADLevel3File' class.
  */
 class Level3Factory {
-    constructor (initial_radar_obj) {
+    constructor(initial_radar_obj) {
         this.initial_radar_obj = initial_radar_obj;
 
         this.nexrad_level = 3;
@@ -241,7 +241,7 @@ function np_linspace(startValue, stopValue, cardinality) {
     var arr = [];
     var step = (stopValue - startValue) / (cardinality - 1);
     for (var i = 0; i < cardinality; i++) {
-      arr.push(startValue + (step * i));
+        arr.push(startValue + (step * i));
     }
     return arr;
 }
