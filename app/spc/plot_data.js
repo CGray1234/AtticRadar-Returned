@@ -48,7 +48,8 @@ function _get_text_url(category, day) {
 }
 
 function _click_listener(e) {
-    const properties = e.features[0].properties;
+    const renderedFeatures = map.queryRenderedFeatures(e.point);
+    if (renderedFeatures[0] && renderedFeatures[0].layer.id == 'stationSymbolLayer') return;
 
     var current_info = $('#spcDataInfo').find('b').text();
     current_info = current_info.split(' ');
